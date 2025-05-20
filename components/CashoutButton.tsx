@@ -13,8 +13,8 @@ interface CashoutButtonProps {
  * 
  * This component provides a button for users to cash out their credits.
  * It includes special "mischievous" behavior for high-credit players:
- * - The button may jump away from the cursor when hovered (30% chance)
- * - The button may become temporarily unclickable (20% chance)
+ * - On hover, 50% chance it jumps 300px in a random direction
+ * - 40% chance it becomes temporarily unclickable
  * - After 3 jump attempts, the button behavior normalizes
  * - Players must roll at least REQUIRED_ROLLS times before cashout is allowed
  * 
@@ -46,12 +46,13 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   }, [state.userId, state.sessionId]);
 
   const handleMouseEnter = () => {
-    if (state.credits > 20 && jumpCount < 3 && !forceEnable) {
-      if (Math.random() < 0.3) {
-        const randomX = Math.random() < 0.5 ? -100 : 100;
-        const randomY = Math.random() < 0.5 ? -50 : 50;
+    if (state.credits > 15 && jumpCount < 3 && !forceEnable) {
+      if (Math.random() < 0.5) {
+        const angle = Math.random() * Math.PI * 2;
+        const jumpX = Math.cos(angle) * 300;
+        const jumpY = Math.sin(angle) * 300; 
 
-        setPosition({ x: randomX, y: randomY });
+        setPosition({ x: jumpX, y: jumpY });
         setIsJumping(true);
         setJumpCount(prevCount => prevCount + 1);
 
@@ -61,12 +62,12 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
         }, 500);
       }
 
-      if (Math.random() < 0.2) {
+      if (Math.random() < 0.4) {
         setIsClickable(false);
 
         setTimeout(() => {
           setIsClickable(true);
-        }, 700);
+        }, 800);
       }
     }
   };
@@ -80,14 +81,16 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
 
   const buttonStyle = {
     transform: isJumping ? `translate(${position.x}px, ${position.y}px)` : 'translate(0, 0)',
-    transition: isJumping ? 'transform 0.2s ease-in-out' : 'transform 0.5s ease-in-out',
+    transition: isJumping ? 'transform 0.2s ease-out' : 'transform 0.5s ease-in-out',
   };
 
   return (
     <div style={buttonStyle} className="relative">
       <button
         ref={buttonRef}
-        className={`bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-xl shadow-lg ${(!isClickable || finalDisabled) ? 'opacity-50 cursor-not-allowed' : 'animate-pulse-slow'
+        className={`bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-xl shadow-lg ${(!isClickable || finalDisabled)
+          ? 'opacity-50 cursor-not-allowed'
+          : 'animate-pulse-slow'
           }`}
         onClick={() => {
           if ((isClickable || forceEnable) && !finalDisabled) {

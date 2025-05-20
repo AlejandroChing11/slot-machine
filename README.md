@@ -1,22 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Slot Machine Game
+
+A fun casino-style slot machine game built with Next.js, React, and Prisma.
+
+## Features
+
+- Casino-styled UI with animations and SVG icons
+- User authentication with email/password
+- Account registration and login system
+- Real-time credit tracking for registered users
+- Guest play option for trying the game
+- Server-side session tracking
+- Rigged win rates at higher credit levels (the house always wins!)
+- Database persistence for users and game sessions
+- Responsive design that works on mobile and desktop
+
+## How to Play
+
+1. Register an account or play as a guest
+2. Each roll costs 1 credit
+3. Match 3 symbols to win:
+   - 🍒 Cherry: 10 credits
+   - 🍋 Lemon: 20 credits
+   - 🍊 Orange: 30 credits
+   - 🍉 Watermelon: 40 credits
+4. Registered users can cash out their winnings to their account
+5. Guests need to register before cashing out
+
+## Technical Details
+
+- Built with Next.js 14 and React
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Prisma ORM with SQLite database
+- Server-side API routes
+- Client-side state management with Context API
+- Persistent storage with localStorage
+- Password authentication with SHA-256 hashing
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Run database migrations with `npx prisma migrate dev`
+4. Start the development server with `npm run dev`
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Database Schema
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **User**: Stores user accounts with credits
+- **GameSession**: Tracks active game sessions and roll history
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Default Accounts
+
+The system automatically creates a guest account with the following credentials:
+- Email: guest@example.com
+- Password: guest123
+
+You can use this to test the login functionality or create your own account.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

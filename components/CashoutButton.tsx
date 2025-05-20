@@ -8,7 +8,22 @@ interface CashoutButtonProps {
   disabled?: boolean;
 }
 
-//COMMENT THE COMPONENT HERE AS A COMMENT TO UNDERSTAND THE COMPONENT
+/**
+ * CashoutButton Component
+ * 
+ * This component provides a button for users to cash out their credits.
+ * It includes special "mischievous" behavior for high-credit players:
+ * - The button may jump away from the cursor when hovered (30% chance)
+ * - The button may become temporarily unclickable (20% chance)
+ * - After 3 jump attempts, the button behavior normalizes
+ * - Players must roll at least REQUIRED_ROLLS times before cashout is allowed
+ * 
+ * This creates a casino-like experience where the house makes it slightly
+ * challenging to cash out large winnings, but not impossible.
+ * 
+ * @param onClick Function to call when button is clicked
+ * @param disabled Whether the button should be disabled
+ */
 const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   const { state } = useGame();
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -19,9 +34,7 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const REQUIRED_ROLLS = 2;
-
   const notEnoughRolls = state.rollCount < REQUIRED_ROLLS;
-
   const finalDisabled = disabled || (notEnoughRolls && !forceEnable);
 
   useEffect(() => {
@@ -35,7 +48,7 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   const handleMouseEnter = () => {
     if (state.credits > 20 && jumpCount < 3 && !forceEnable) {
       if (Math.random() < 0.3) {
-        const randomX = Math.random() < 0.5 ? -100 : 100; // Reduced jump distance
+        const randomX = Math.random() < 0.5 ? -100 : 100;
         const randomY = Math.random() < 0.5 ? -50 : 50;
 
         setPosition({ x: randomX, y: randomY });
@@ -87,7 +100,6 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
         CASH OUT
       </button>
 
-      {/* Helper message after multiple attempts */}
       {forceEnable && (
         <div className="absolute top-full left-0 right-0 mt-2 text-xs text-green-300 text-center">
           The casino has stopped playing games with you. Cash out now!

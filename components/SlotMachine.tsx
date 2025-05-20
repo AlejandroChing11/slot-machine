@@ -4,15 +4,37 @@ import React, { useState, useEffect } from 'react';
 import { Symbol } from '@/lib/types';
 import { SlotIconComponent, SpinningIcon } from './SlotIcons';
 
+/**
+ * Props for the SlotMachine component
+ * @property symbols - The current symbols to display after rolling
+ * @property isRolling - Whether the slot machine is currently spinning
+ * @property onRollComplete - Optional callback when the roll animation completes
+ */
 interface SlotMachineProps {
   symbols: Symbol[] | null;
   isRolling: boolean;
   onRollComplete?: () => void;
 }
 
+/**
+ * Timing delays (in ms) for revealing each slot reel
+ * Creates a staggered reveal effect similar to real slot machines
+ */
 const REVEAL_DELAYS = [1000, 2000, 3000];
 
-//COMMENT THE COMPONENT HERE AS A COMMENT TO UNDERSTAND THE COMPONENT
+/**
+ * SlotMachine Component
+ * 
+ * Renders a three-reel slot machine with spinning animation and staggered reveals.
+ * When the user rolls, each reel spins and then reveals its symbol at different
+ * times to create suspense.
+ * 
+ * Features:
+ * - Dynamic symbol rendering based on roll results
+ * - Spinning animation during the roll
+ * - Staggered reveal of each reel's symbol
+ * - Callback when animation completes
+ */
 const SlotMachine: React.FC<SlotMachineProps> = ({
   symbols,
   isRolling,

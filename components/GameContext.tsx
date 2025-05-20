@@ -6,22 +6,30 @@ import { Symbol, GameSession, RollResponse, CashoutResponse } from '@/lib/types'
 import { GUEST_USER_ID } from '@/lib/constants';
 import { setLocalStorage, getLocalStorage, removeLocalStorage, STORAGE_KEYS } from '@/lib/localStorage';
 
+/**
+ * GameState defines the structure of our application state
+ * This contains all the data needed to render the game UI and track player progress
+ */
 interface GameState {
-  userId: string | null;
-  userName: string | null;
-  sessionId: string | null;
-  credits: number;
-  symbols: Symbol[] | null;
-  isRolling: boolean;
-  gameOver: boolean;
-  error: string | null;
-  cashedOut: number | null;
-  userTotalCredits: number | null;
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  rollCount: number;
+  userId: string | null;        // Current user ID (null for guests)
+  userName: string | null;      // User's display name
+  sessionId: string | null;     // Current game session ID
+  credits: number;              // Credits available in the current game session
+  symbols: Symbol[] | null;     // Current symbols displayed on the slot machine
+  isRolling: boolean;           // Whether the slots are currently spinning
+  gameOver: boolean;            // Whether the current game session is over
+  error: string | null;         // Error message to display, if any
+  cashedOut: number | null;     // Amount of credits cashed out in the last cashout
+  userTotalCredits: number | null; // User's account balance (separate from game credits)
+  isLoggedIn: boolean;          // Whether the user is authenticated
+  isLoading: boolean;           // Whether an API request is in progress
+  rollCount: number;            // Number of times the user has rolled in this session
 }
 
+/**
+ * GameAction defines all possible actions that can modify the game state
+ * Each action has a type and may include a payload with additional data
+ */
 type GameAction =
   | { type: 'SET_USER'; payload: { userId: string; userName: string; userCredits?: number } }
   | { type: 'START_SESSION_SUCCESS'; payload: { sessionId: string; credits: number } }
@@ -37,6 +45,10 @@ type GameAction =
   | { type: 'RESTORE_STATE'; payload: Partial<GameState> }
   | { type: 'UPDATE_USER_CREDITS'; payload: number };
 
+/**
+ * Initial state for the game
+ * All users start with these values before any actions are dispatched
+ */
 const initialState: GameState = {
   userId: null,
   userName: null,
@@ -53,7 +65,18 @@ const initialState: GameState = {
   rollCount: 0,
 };
 
-//COMMENT THE REDUCER HERE AS A COMMENT TO UNDERSTAND THE REDUCER
+/**
+ * The gameReducer is responsible for state updates in response to actions
+ * It takes the current state and an action, then returns the updated state
+ * This follows the Redux pattern for predictable state management
+ * 
+ * The switch statement handles different action types:
+ * - SET_USER: Updates user information when logging in
+ * - START_SESSION_SUCCESS: Initializes a new game session
+ * - ROLL_SUCCESS: Updates game state after a successful roll
+ * - CASHOUT_SUCCESS: Handles credits transfer when cashing out
+ * - And many more to handle various game events
+ */
 const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'SET_USER':
@@ -69,7 +92,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         setLocalStorage(STORAGE_KEYS.USER_CREDITS, newCredits);
       }
 
-
       return {
         ...state,
         userId: action.payload.userId,
@@ -77,6 +99,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         userTotalCredits: newCredits,
         isLoggedIn: true,
       };
+
     case 'START_SESSION_SUCCESS':
       setLocalStorage(STORAGE_KEYS.SESSION_ID, action.payload.sessionId);
 
@@ -90,18 +113,21 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         isLoading: false,
         rollCount: 0,
       };
+
     case 'START_SESSION_ERROR':
       return {
         ...state,
         error: action.payload,
         isLoading: false,
       };
+
     case 'START_ROLL':
       return {
         ...state,
         isRolling: true,
         error: null,
       };
+
     case 'ROLL_SUCCESS':
       return {
         ...state,
@@ -111,12 +137,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         error: null,
         rollCount: state.rollCount + 1,
       };
+
     case 'ROLL_ERROR':
       return {
         ...state,
         isRolling: false,
         error: action.payload,
       };
+
     case 'CASHOUT_SUCCESS':
       removeLocalStorage(STORAGE_KEYS.SESSION_ID);
       removeLocalStorage(STORAGE_KEYS.USER_ID);
@@ -136,12 +164,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         userName: null,
         isLoggedIn: false,
       };
+
     case 'CASHOUT_ERROR':
       return {
         ...state,
         error: action.payload,
         isLoading: false,
       };
+
     case 'RESET_GAME':
       removeLocalStorage(STORAGE_KEYS.SESSION_ID);
 
@@ -156,6 +186,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         cashedOut: null,
         isLoading: false,
       };
+
     case 'LOGOUT':
       removeLocalStorage(STORAGE_KEYS.USER_ID);
       removeLocalStorage(STORAGE_KEYS.USER_NAME);
@@ -166,16 +197,19 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
       return {
         ...initialState,
       };
+
     case 'SET_LOADING':
       return {
         ...state,
         isLoading: action.payload,
       };
+
     case 'RESTORE_STATE':
       return {
         ...state,
         ...action.payload,
       };
+
     case 'UPDATE_USER_CREDITS':
       setLocalStorage(STORAGE_KEYS.USER_CREDITS, action.payload);
 
@@ -183,11 +217,16 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         userTotalCredits: action.payload,
       };
+
     default:
       return state;
   }
 };
 
+/**
+ * Context definition for the game state and functions
+ * This provides the interface that components will use to interact with the game
+ */
 const GameContext = createContext<{
   state: GameState;
   setUser: (userId: string, userName: string, userCredits?: number) => void;
@@ -198,7 +237,15 @@ const GameContext = createContext<{
   logout: () => void;
 } | undefined>(undefined);
 
-
+/**
+ * GameProvider is a React component that manages game state
+ * It uses useReducer to handle state updates and provides context to child components
+ * This component handles:
+ * - Initial state setup
+ * - State persistence with localStorage
+ * - Providing game functions to components
+ * - API communication for game actions
+ */
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [mounted, setMounted] = useState(false);
@@ -212,7 +259,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userName = getLocalStorage<string | null>(STORAGE_KEYS.USER_NAME, null);
       const sessionId = getLocalStorage<string | null>(STORAGE_KEYS.SESSION_ID, null);
       const savedUserCredits = getLocalStorage<number | null>(STORAGE_KEYS.USER_CREDITS, null);
-
 
       if (isLoggedIn && userId && userName) {
         dispatch({
@@ -262,8 +308,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  /**
+   * Updates user information and fetches user profile
+   * Called when a user logs in or registers
+   */
   const setUser = (userId: string, userName: string, userCredits?: number) => {
-
     dispatch({
       type: 'SET_USER',
       payload: { userId, userName, userCredits },
@@ -271,15 +320,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     fetchUserProfile(userId).then(profile => {
       if (profile) {
-        console.log('Updated profile with credits:', profile.credits);
+        // Profile data will be used to update state with current credits
       }
     });
   };
 
+  /**
+   * Fetches the user's profile from the server
+   * Updates credit information in the state
+   */
   const fetchUserProfile = async (userId: string) => {
     try {
       const response = await axios.post('/api/auth/profile', { userId });
-
 
       dispatch({
         type: 'UPDATE_USER_CREDITS',
@@ -293,6 +345,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Starts a new game session or reuses an existing one
+   * For logged-in users, uses their account balance as credits
+   * For guests, provides 10 starting credits
+   */
   const startSession = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
@@ -323,6 +380,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Spins the slot machine to generate new symbols
+   * Updates credits based on winning combinations
+   */
   const rollSlots = async () => {
     if (!state.sessionId) return;
 
@@ -332,7 +393,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await axios.post('/api/roll', {
         sessionId: state.sessionId,
       });
-
 
       setTimeout(() => {
         dispatch({
@@ -349,6 +409,11 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Transfers game credits to the user's account
+   * Requires at least 2 rolls before cashout is allowed
+   * Ends the current session and logs the user out
+   */
   const cashOut = async () => {
     if (!state.sessionId) return;
 
@@ -382,7 +447,6 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         type: 'CASHOUT_SUCCESS',
         payload: response.data,
       });
-
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to cash out';
       dispatch({
@@ -392,10 +456,18 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  /**
+   * Resets the game to start a new session
+   * Keeps user logged in but clears current game state
+   */
   const resetGame = () => {
     dispatch({ type: 'RESET_GAME' });
   };
 
+  /**
+   * Logs out the current user
+   * Clears all user data from state and localStorage
+   */
   const logout = () => {
     dispatch({ type: 'LOGOUT' });
   };
@@ -421,6 +493,10 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+/**
+ * Custom hook to access game context from any component
+ * Ensures the component is used within a GameProvider
+ */
 export const useGame = () => {
   const context = useContext(GameContext);
   if (context === undefined) {

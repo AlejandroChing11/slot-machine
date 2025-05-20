@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
           id: GUEST_USER_ID,
           name: 'Guest Player',
           email: 'guest@example.com',
+          password: 'guest-no-password-needed',
           credits: 0,
         },
       });

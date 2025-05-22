@@ -12,14 +12,11 @@ interface CashoutButtonProps {
  * CashoutButton Component
  * 
  * This component provides a button for users to cash out their credits.
- * It includes special "mischievous" behavior for high-credit players:
- * - On hover, 50% chance it jumps 300px in a random direction
- * - 40% chance it becomes temporarily unclickable
- * - After 3 jump attempts, the button behavior normalizes
+ * It includes mischievous behavior:
+ * - On hover, 80% chance it jumps 300px in a random direction
+ * - 70% chance it becomes temporarily unclickable
+ * - After 10 jump attempts, the button behavior normalizes
  * - Players must roll at least REQUIRED_ROLLS times before cashout is allowed
- * 
- * This creates a casino-like experience where the house makes it slightly
- * challenging to cash out large winnings, but not impossible.
  * 
  * @param onClick Function to call when button is clicked
  * @param disabled Whether the button should be disabled
@@ -46,8 +43,8 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   }, [state.userId, state.sessionId]);
 
   const handleMouseEnter = () => {
-    if (state.credits > 15 && jumpCount < 3 && !forceEnable) {
-      if (Math.random() < 0.5) {
+    if (jumpCount < 10 && !forceEnable) {
+      if (Math.random() < 0.8) {
         const angle = Math.random() * Math.PI * 2;
         const jumpX = Math.cos(angle) * 300;
         const jumpY = Math.sin(angle) * 300; 
@@ -62,7 +59,7 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
         }, 500);
       }
 
-      if (Math.random() < 0.4) {
+      if (Math.random() < 0.7) {
         setIsClickable(false);
 
         setTimeout(() => {
@@ -73,7 +70,7 @@ const CashoutButton: React.FC<CashoutButtonProps> = ({ onClick, disabled }) => {
   };
 
   useEffect(() => {
-    if (jumpCount >= 3 && !forceEnable) {
+    if (jumpCount >= 10 && !forceEnable) {
       setForceEnable(true);
       setIsClickable(true);
     }
